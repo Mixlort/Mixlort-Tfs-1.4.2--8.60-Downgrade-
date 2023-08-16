@@ -201,12 +201,6 @@ Condition* Condition::createCondition(ConditionId_t id, ConditionType_t type, in
 		case CONDITION_ATTRIBUTES:
 			return new ConditionAttributes(id, type, ticks, buff, subId, aggressive);
 
-		case CONDITION_SPELLCOOLDOWN:
-			return new ConditionSpellCooldown(id, type, ticks, buff, subId, aggressive);
-
-		case CONDITION_SPELLGROUPCOOLDOWN:
-			return new ConditionSpellGroupCooldown(id, type, ticks, buff, subId, aggressive);
-
 		case CONDITION_DRUNK:
 			return new ConditionDrunk(id, type, ticks, buff, subId, param, aggressive);
 
@@ -222,8 +216,6 @@ Condition* Condition::createCondition(ConditionId_t id, ConditionType_t type, in
 			return new ConditionGeneric(id, type, ticks, buff, subId, aggressive);
 		case CONDITION_ROOT:
 			return new ConditionGeneric(id, type, ticks, buff, subId, aggressive);
-		case CONDITION_MANASHIELD_BREAKABLE:
-			return new ConditionManaShield(id, type, ticks, buff, subId);
 
 		default:
 			return nullptr;
@@ -363,10 +355,6 @@ uint32_t ConditionGeneric::getIcons() const
 			icons |= ICON_SWORDS;
 			break;
 
-		case CONDITION_ROOT:
-			icons |= ICON_ROOT;
-			break;
-
 		default:
 			break;
 	}
@@ -385,7 +373,6 @@ void ConditionAttributes::addCondition(Creature* creature, const Condition* cond
 
 		// Apply the new one
 		memcpy(skills, conditionAttrs.skills, sizeof(skills));
-		memcpy(specialSkills, conditionAttrs.specialSkills, sizeof(specialSkills));
 		memcpy(skillsPercent, conditionAttrs.skillsPercent, sizeof(skillsPercent));
 		memcpy(stats, conditionAttrs.stats, sizeof(stats));
 		memcpy(statsPercent, conditionAttrs.statsPercent, sizeof(statsPercent));
@@ -404,8 +391,8 @@ bool ConditionAttributes::unserializeProp(ConditionAttr_t attr, PropStream& prop
 {
 	if (attr == CONDITIONATTR_SKILLS) {
 		return propStream.read<int32_t>(skills[currentSkill++]);
-	} else if (attr == CONDITIONATTR_SPECIALSKILLS) {
-		return propStream.read<int32_t>(specialSkills[currentSpecialSkill++]);
+	/* } else if (attr == CONDITIONATTR_SPECIALSKILLS) {
+		return propStream.read<int32_t>(specialSkills[currentSpecialSkill++]);*/
 	} else if (attr == CONDITIONATTR_STATS) {
 		return propStream.read<int32_t>(stats[currentStat++]);
 	} else if (attr == CONDITIONATTR_DISABLEDEFENSE) {
@@ -431,10 +418,10 @@ void ConditionAttributes::serialize(PropWriteStream& propWriteStream)
 	propWriteStream.write<uint8_t>(CONDITIONATTR_DISABLEDEFENSE);
 	propWriteStream.write<bool>(disableDefense);
 
-	for (int32_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
+	/*for (int32_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
 		propWriteStream.write<uint8_t>(CONDITIONATTR_SPECIALSKILLS);
 		propWriteStream.write<int32_t>(specialSkills[i]);
-	}
+	}*/
 }
 
 bool ConditionAttributes::startCondition(Creature* creature)
@@ -518,13 +505,6 @@ void ConditionAttributes::updateSkills(Player* player)
 		}
 	}
 
-	for (int32_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
-		if (specialSkills[i]) {
-			needUpdateSkills = true;
-			player->setVarSpecialSkill(static_cast<SpecialSkills_t>(i), specialSkills[i]);
-		}
-	}
-
 	if (needUpdateSkills) {
 		player->sendSkills();
 	}
@@ -545,13 +525,6 @@ void ConditionAttributes::endCondition(Creature* creature)
 			if (skills[i] || skillsPercent[i]) {
 				needUpdateSkills = true;
 				player->setVarSkill(static_cast<skills_t>(i), -skills[i]);
-			}
-		}
-
-		for (int32_t i = SPECIALSKILL_FIRST; i <= SPECIALSKILL_LAST; ++i) {
-			if (specialSkills[i]) {
-				needUpdateSkills = true;
-				player->setVarSpecialSkill(static_cast<SpecialSkills_t>(i), -specialSkills[i]);
 			}
 		}
 
@@ -703,41 +676,6 @@ bool ConditionAttributes::setParam(ConditionParam_t param, int32_t value)
 			return true;
 		}
 
-		case CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE: {
-			specialSkills[SPECIALSKILL_CRITICALHITCHANCE] = value;
-			return true;
-		}
-
-		case CONDITION_PARAM_SPECIALSKILL_CRITICALHITAMOUNT: {
-			specialSkills[SPECIALSKILL_CRITICALHITAMOUNT] = value;
-			return true;
-		}
-
-		case CONDITION_PARAM_SPECIALSKILL_LIFELEECHCHANCE: {
-			specialSkills[SPECIALSKILL_LIFELEECHCHANCE] = value;
-			return true;
-		}
-
-		case CONDITION_PARAM_SPECIALSKILL_LIFELEECHAMOUNT: {
-			specialSkills[SPECIALSKILL_LIFELEECHAMOUNT] = value;
-			return true;
-		}
-
-		case CONDITION_PARAM_SPECIALSKILL_MANALEECHCHANCE: {
-			specialSkills[SPECIALSKILL_MANALEECHCHANCE] = value;
-			return true;
-		}
-
-		case CONDITION_PARAM_SPECIALSKILL_MANALEECHAMOUNT: {
-			specialSkills[SPECIALSKILL_MANALEECHAMOUNT] = value;
-			return true;
-		}
-
-		case CONDITION_PARAM_AGGRESSIVE: {
-			aggressive = (value != 0);
-			return true;
-		}
-
 		default:
 			return ret;
 	}
@@ -809,7 +747,7 @@ int32_t ConditionAttributes::getParam(ConditionParam_t param)
 		case CONDITION_PARAM_DISABLE_DEFENSE:
 			return disableDefense ? 1 : 0;
 
-		case CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE:
+		/*case CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE:
 			return specialSkills[SPECIALSKILL_CRITICALHITCHANCE];
 
 		case CONDITION_PARAM_SPECIALSKILL_CRITICALHITAMOUNT:
@@ -825,7 +763,7 @@ int32_t ConditionAttributes::getParam(ConditionParam_t param)
 			return specialSkills[SPECIALSKILL_MANALEECHCHANCE];
 
 		case CONDITION_PARAM_SPECIALSKILL_MANALEECHAMOUNT:
-			return specialSkills[SPECIALSKILL_MANALEECHAMOUNT];
+			return specialSkills[SPECIALSKILL_MANALEECHAMOUNT];*/
 
 		default:
 			return ConditionGeneric::getParam(param);
@@ -897,20 +835,18 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 		if (isBuff && realHealthGain > 0) {
 			Player* player = creature->getPlayer();
 			if (player) {
-				std::string healString =
-				    std::to_string(realHealthGain) + (realHealthGain != 1 ? " hitpoints." : " hitpoint.");
+				std::string healString = std::to_string(realHealthGain) + (realHealthGain != 1 ? " hitpoints." : " hitpoint.");
 
-				TextMessage message(MESSAGE_HEALED, "You were healed for " + healString);
-				message.position = player->getPosition();
-				message.primary.value = realHealthGain;
-				message.primary.color = TEXTCOLOR_MAYABLUE;
+				TextMessage message(MESSAGE_STATUS_DEFAULT, "You were healed for " + healString);
 				player->sendTextMessage(message);
+
+				g_game.addAnimatedText(std::to_string(realHealthGain), player->getPosition(), TEXTCOLOR_MAYABLUE);
 
 				SpectatorVec spectators;
 				g_game.map.getSpectators(spectators, player->getPosition(), false, true);
 				spectators.erase(player);
 				if (!spectators.empty()) {
-					message.type = MESSAGE_HEALED_OTHERS;
+					message.type = MESSAGE_STATUS_DEFAULT;
 					message.text = player->getName() + " was healed for " + healString;
 					for (Creature* spectator : spectators) {
 						assert(dynamic_cast<Player*>(spectator) != nullptr);
@@ -932,17 +868,16 @@ bool ConditionRegeneration::executeCondition(Creature* creature, int32_t interva
 			if (isBuff && realManaGain > 0) {
 				std::string manaGainString = std::to_string(realManaGain);
 
-				TextMessage message(MESSAGE_HEALED, "You gained " + manaGainString + " mana.");
-				message.position = player->getPosition();
-				message.primary.value = realManaGain;
-				message.primary.color = TEXTCOLOR_MAYABLUE;
+				TextMessage message(MESSAGE_STATUS_DEFAULT, "You gained " + manaGainString + " mana.");
 				player->sendTextMessage(message);
+
+				g_game.addAnimatedText(std::to_string(realManaGain), player->getPosition(), TEXTCOLOR_BLUE);
 
 				SpectatorVec spectators;
 				g_game.map.getSpectators(spectators, player->getPosition(), false, true);
 				spectators.erase(player);
 				if (!spectators.empty()) {
-					message.type = MESSAGE_HEALED_OTHERS;
+					message.type = MESSAGE_STATUS_DEFAULT;
 					message.text = player->getName() + " gained " + manaGainString + " mana.";
 					for (Creature* spectator : spectators) {
 						assert(dynamic_cast<Player*>(spectator) != nullptr);
@@ -1487,10 +1422,6 @@ uint32_t ConditionDamage::getIcons() const
 			icons |= ICON_CURSED;
 			break;
 
-		case CONDITION_BLEEDING:
-			icons |= ICON_BLEEDING;
-			break;
-
 		default:
 			break;
 	}
@@ -1866,64 +1797,6 @@ void ConditionLight::serialize(PropWriteStream& propWriteStream)
 	propWriteStream.write<uint32_t>(lightChangeInterval);
 }
 
-void ConditionSpellCooldown::addCondition(Creature* creature, const Condition* condition)
-{
-	if (updateCondition(condition)) {
-		setTicks(condition->getTicks());
-
-		if (subId != 0 && ticks > 0) {
-			Player* player = creature->getPlayer();
-			if (player) {
-				player->sendSpellCooldown(subId, ticks);
-			}
-		}
-	}
-}
-
-bool ConditionSpellCooldown::startCondition(Creature* creature)
-{
-	if (!Condition::startCondition(creature)) {
-		return false;
-	}
-
-	if (subId != 0 && ticks > 0) {
-		Player* player = creature->getPlayer();
-		if (player) {
-			player->sendSpellCooldown(subId, ticks);
-		}
-	}
-	return true;
-}
-
-void ConditionSpellGroupCooldown::addCondition(Creature* creature, const Condition* condition)
-{
-	if (updateCondition(condition)) {
-		setTicks(condition->getTicks());
-
-		if (subId != 0 && ticks > 0) {
-			Player* player = creature->getPlayer();
-			if (player) {
-				player->sendSpellGroupCooldown(static_cast<SpellGroup_t>(subId), ticks);
-			}
-		}
-	}
-}
-
-bool ConditionSpellGroupCooldown::startCondition(Creature* creature)
-{
-	if (!Condition::startCondition(creature)) {
-		return false;
-	}
-
-	if (subId != 0 && ticks > 0) {
-		Player* player = creature->getPlayer();
-		if (player) {
-			player->sendSpellGroupCooldown(static_cast<SpellGroup_t>(subId), ticks);
-		}
-	}
-	return true;
-}
-
 bool ConditionDrunk::startCondition(Creature* creature)
 {
 	if (!Condition::startCondition(creature)) {
@@ -1969,108 +1842,4 @@ bool ConditionDrunk::setParam(ConditionParam_t param, int32_t value)
 			return ret;
 		}
 	}
-}
-
-bool ConditionManaShield::startCondition(Creature* creature)
-{
-	if (!Condition::startCondition(creature)) {
-		return false;
-	}
-
-	if (Player* player = creature->getPlayer()) {
-		const auto& conditionManaShield = static_cast<const ConditionManaShield&>(*this);
-		manaShield = conditionManaShield.manaShield;
-		maxManaShield = conditionManaShield.manaShield;
-		player->sendStats();
-		return true;
-	}
-	return false;
-}
-
-void ConditionManaShield::endCondition(Creature* creature)
-{
-	if (Player* player = creature->getPlayer()) {
-		player->sendStats();
-	}
-}
-
-void ConditionManaShield::addCondition(Creature* creature, const Condition* addCondition)
-{
-	if (Player* player = creature->getPlayer()) {
-		endCondition(player);
-		setTicks(addCondition->getTicks());
-
-		const auto& conditionManaShield = static_cast<const ConditionManaShield&>(*addCondition);
-		manaShield = conditionManaShield.manaShield;
-		maxManaShield = conditionManaShield.manaShield;
-		player->sendStats();
-	}
-}
-
-bool ConditionManaShield::unserializeProp(ConditionAttr_t attr, PropStream& propStream)
-{
-	if (attr == CONDITIONATTR_MANASHIELD_BREAKABLE_MANA) {
-		return propStream.read<uint16_t>(manaShield);
-	}
-
-	if (attr == CONDITIONATTR_MANASHIELD_BREAKABLE_MAXMANA) {
-		return propStream.read<uint16_t>(maxManaShield);
-	}
-	return Condition::unserializeProp(attr, propStream);
-}
-
-int32_t ConditionManaShield::onDamageTaken(Player* player, int32_t manaChange)
-{
-	if (!player) {
-		return 0;
-	}
-
-	if (manaChange > manaShield) {
-		return manaChange - manaShield;
-	}
-
-	manaShield -= manaChange;
-
-	player->sendStats();
-	return 0;
-}
-
-void ConditionManaShield::serialize(PropWriteStream& propWriteStream)
-{
-	Condition::serialize(propWriteStream);
-
-	propWriteStream.write<uint8_t>(CONDITIONATTR_MANASHIELD_BREAKABLE_MANA);
-	propWriteStream.write<uint16_t>(manaShield);
-	propWriteStream.write<uint8_t>(CONDITIONATTR_MANASHIELD_BREAKABLE_MAXMANA);
-	propWriteStream.write<uint16_t>(maxManaShield);
-}
-
-bool ConditionManaShield::setParam(ConditionParam_t param, int32_t value)
-{
-	bool ret = Condition::setParam(param, value);
-
-	switch (param) {
-		case CONDITION_PARAM_MANASHIELD_BREAKABLE:
-			manaShield = value;
-			return true;
-
-		default:
-			return ret;
-	}
-}
-
-uint32_t ConditionManaShield::getIcons() const
-{
-	uint32_t icons = Condition::getIcons();
-
-	switch (conditionType) {
-		case CONDITION_MANASHIELD_BREAKABLE:
-			icons |= ICON_MANASHIELD_BREAKABLE;
-			break;
-
-		default:
-			break;
-	}
-
-	return icons;
 }

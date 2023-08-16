@@ -4,11 +4,10 @@
 #include "otpch.h"
 
 #include "depotchest.h"
-
 #include "tools.h"
 
-DepotChest::DepotChest(uint16_t type, bool paginated /*= true*/) :
-    Container{type, items[type].maxItems, true, paginated}
+DepotChest::DepotChest(uint16_t type) :
+    Container{type, items[type].maxItems}
 {}
 
 ReturnValue DepotChest::queryAdd(int32_t index, const Thing& thing, uint32_t count, uint32_t flags,
@@ -45,7 +44,6 @@ ReturnValue DepotChest::queryAdd(int32_t index, const Thing& thing, uint32_t cou
 
 void DepotChest::postAddNotification(Thing* thing, const Cylinder* oldParent, int32_t index, cylinderlink_t)
 {
-	Cylinder* parent = getParent();
 	if (parent) {
 		parent->postAddNotification(thing, oldParent, index, LINK_PARENT);
 	}
@@ -53,16 +51,15 @@ void DepotChest::postAddNotification(Thing* thing, const Cylinder* oldParent, in
 
 void DepotChest::postRemoveNotification(Thing* thing, const Cylinder* newParent, int32_t index, cylinderlink_t)
 {
-	Cylinder* parent = getParent();
 	if (parent) {
 		parent->postRemoveNotification(thing, newParent, index, LINK_PARENT);
 	}
 }
 
-Cylinder* DepotChest::getParent() const
+/*Cylinder* DepotChest::getParent() const
 {
 	if (parent) {
 		return parent->getParent();
 	}
 	return nullptr;
-}
+}*/

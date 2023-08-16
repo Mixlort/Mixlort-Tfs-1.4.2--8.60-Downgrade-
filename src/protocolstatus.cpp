@@ -29,7 +29,7 @@ enum RequestedInfo_t : uint16_t
 
 void ProtocolStatus::onRecvFirstMessage(NetworkMessage& msg)
 {
-	const static auto acceptorAddress = Connection::Address::from_string(g_config.getString(ConfigManager::IP));
+	const static auto acceptorAddress = Connection::Address::from_string(g_config.getString(ConfigManager::IP_STRING));
 
 	const auto& ip = getIP();
 
@@ -92,7 +92,7 @@ void ProtocolStatus::sendStatusString()
 	pugi::xml_node serverinfo = tsqp.append_child("serverinfo");
 	uint64_t uptime = (OTSYS_TIME() - ProtocolStatus::start) / 1000;
 	serverinfo.append_attribute("uptime") = std::to_string(uptime).c_str();
-	serverinfo.append_attribute("ip") = g_config.getString(ConfigManager::IP).c_str();
+	serverinfo.append_attribute("ip") = g_config.getString(ConfigManager::IP_STRING).c_str();
 	serverinfo.append_attribute("servername") = g_config.getString(ConfigManager::SERVER_NAME).c_str();
 	serverinfo.append_attribute("port") = std::to_string(g_config.getNumber(ConfigManager::LOGIN_PORT)).c_str();
 	serverinfo.append_attribute("location") = g_config.getString(ConfigManager::LOCATION).c_str();
@@ -151,7 +151,7 @@ void ProtocolStatus::sendInfo(uint16_t requestedInfo, const std::string& charact
 	if (requestedInfo & REQUEST_BASIC_SERVER_INFO) {
 		output->addByte(0x10);
 		output->addString(g_config.getString(ConfigManager::SERVER_NAME));
-		output->addString(g_config.getString(ConfigManager::IP));
+		output->addString(g_config.getString(ConfigManager::IP_STRING));
 		output->addString(std::to_string(g_config.getNumber(ConfigManager::LOGIN_PORT)));
 	}
 

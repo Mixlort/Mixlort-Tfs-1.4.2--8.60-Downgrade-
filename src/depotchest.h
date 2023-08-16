@@ -6,10 +6,12 @@
 
 #include "container.h"
 
+using DepotChest_ptr = std::shared_ptr<DepotChest>;
+
 class DepotChest final : public Container
 {
 public:
-	explicit DepotChest(uint16_t type, bool paginated = true);
+	explicit DepotChest(uint16_t type);
 
 	// serialization
 	void setMaxDepotItems(uint32_t maxitems) { maxDepotItems = maxitems; }
@@ -26,7 +28,7 @@ public:
 	// overrides
 	bool canRemove() const override { return false; }
 
-	Cylinder* getParent() const override;
+	//Cylinder* getParent() const override;
 	Cylinder* getRealParent() const override { return parent; }
 
 private:

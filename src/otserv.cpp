@@ -7,7 +7,6 @@
 #include "databasemanager.h"
 #include "databasetasks.h"
 #include "game.h"
-#include "iomarket.h"
 #include "monsters.h"
 #include "outfit.h"
 #include "protocollogin.h"
@@ -319,9 +318,6 @@ void mainLoader(int, char*[], ServiceManager* services)
 
 	g_game.map.houses.payHouses(rentPeriod);
 
-	IOMarket::checkExpiredOffers();
-	IOMarket::getInstance().updateStatistics();
-
 	std::cout << ">> Loaded all modules, server starting up..." << std::endl;
 
 #ifndef _WIN32
@@ -358,7 +354,7 @@ bool argumentsHandler(const StringVector& args)
 		if (tmp[0] == "--config")
 			g_config.setString(ConfigManager::CONFIG_FILE, tmp[1]);
 		else if (tmp[0] == "--ip")
-			g_config.setString(ConfigManager::IP, tmp[1]);
+			g_config.setString(ConfigManager::IP_STRING, tmp[1]);
 		else if (tmp[0] == "--login-port")
 			g_config.setNumber(ConfigManager::LOGIN_PORT, std::stoi(tmp[1].data()));
 		else if (tmp[0] == "--game-port")

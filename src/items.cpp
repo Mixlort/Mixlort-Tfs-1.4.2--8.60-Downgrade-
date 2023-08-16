@@ -193,9 +193,7 @@ const std::unordered_map<std::string, ItemParseAttributes_t> ItemParseAttributes
     {"walkstack", ITEM_PARSE_WALKSTACK},
     {"blocking", ITEM_PARSE_BLOCKING},
     {"allowdistread", ITEM_PARSE_ALLOWDISTREAD},
-    {"storeitem", ITEM_PARSE_STOREITEM},
     {"worth", ITEM_PARSE_WORTH},
-    {"supply", ITEM_PARSE_SUPPLY},
 };
 
 const std::unordered_map<std::string, ItemTypes_t> ItemTypesMap = {{"key", ITEM_TYPE_KEY},
@@ -207,8 +205,7 @@ const std::unordered_map<std::string, ItemTypes_t> ItemTypesMap = {{"key", ITEM_
                                                                    {"teleport", ITEM_TYPE_TELEPORT},
                                                                    {"door", ITEM_TYPE_DOOR},
                                                                    {"bed", ITEM_TYPE_BED},
-                                                                   {"rune", ITEM_TYPE_RUNE},
-                                                                   {"podium", ITEM_TYPE_PODIUM}};
+                                                                   {"rune", ITEM_TYPE_RUNE}};
 
 const std::unordered_map<std::string, tileflags_t> TileStatesMap = {
     {"down", TILESTATE_FLOORCHANGE_DOWN},        {"north", TILESTATE_FLOORCHANGE_NORTH},
@@ -219,12 +216,12 @@ const std::unordered_map<std::string, tileflags_t> TileStatesMap = {
 
 const std::unordered_map<std::string, RaceType_t> RaceTypesMap = {
     {"venom", RACE_VENOM}, {"blood", RACE_BLOOD},   {"undead", RACE_UNDEAD},
-    {"fire", RACE_FIRE},   {"energy", RACE_ENERGY}, {"ink", RACE_INK},
+    {"fire", RACE_FIRE},   {"energy", RACE_ENERGY},
 };
 
 const std::unordered_map<std::string, WeaponType_t> WeaponTypesMap = {
     {"sword", WEAPON_SWORD},       {"club", WEAPON_CLUB}, {"axe", WEAPON_AXE},         {"shield", WEAPON_SHIELD},
-    {"distance", WEAPON_DISTANCE}, {"wand", WEAPON_WAND}, {"ammunition", WEAPON_AMMO}, {"quiver", WEAPON_QUIVER},
+    {"distance", WEAPON_DISTANCE}, {"wand", WEAPON_WAND}, {"ammunition", WEAPON_AMMO},
 };
 
 const std::unordered_map<std::string, FluidTypes_t> FluidTypesMap = {
@@ -485,9 +482,6 @@ bool Items::loadFromOtb(const std::string& file)
 			case ITEM_GROUP_CHARGES:
 			case ITEM_GROUP_DEPRECATED:
 				break;
-			case ITEM_GROUP_PODIUM:
-				iType.type = ITEM_TYPE_PODIUM;
-				break;
 			default:
 				return false;
 		}
@@ -509,7 +503,6 @@ bool Items::loadFromOtb(const std::string& file)
 		iType.rotatable = hasBitSet(FLAG_ROTATABLE, flags);
 		iType.canReadText = hasBitSet(FLAG_READABLE, flags);
 		iType.lookThrough = hasBitSet(FLAG_LOOKTHROUGH, flags);
-		iType.isAnimation = hasBitSet(FLAG_ANIMATION, flags);
 		// iType.walkStack = !hasBitSet(FLAG_FULLTILE, flags);
 		iType.forceUse = hasBitSet(FLAG_FORCEUSE, flags);
 
@@ -652,11 +645,6 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 
 				case ITEM_PARSE_SHOWCOUNT: {
 					it.showCount = valueAttribute.as_bool();
-					break;
-				}
-
-				case ITEM_PARSE_SUPPLY: {
-					it.supply = valueAttribute.as_bool();
 					break;
 				}
 
@@ -1780,11 +1768,6 @@ void Items::parseItemNode(const pugi::xml_node& itemNode, uint16_t id)
 
 				case ITEM_PARSE_ALLOWDISTREAD: {
 					it.allowDistRead = booleanString(valueAttribute.as_string());
-					break;
-				}
-
-				case ITEM_PARSE_STOREITEM: {
-					it.storeItem = booleanString(valueAttribute.as_string());
 					break;
 				}
 

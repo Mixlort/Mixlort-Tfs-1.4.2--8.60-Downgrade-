@@ -34,10 +34,6 @@ void PrivateChatChannel::invitePlayer(const Player& player, Player& invitePlayer
 	                                         player.getSex() == PLAYERSEX_FEMALE ? "her" : "his"));
 
 	player.sendTextMessage(MESSAGE_INFO_DESCR, fmt::format("{:s} has been invited.", invitePlayer.getName()));
-
-	for (const auto& it : users) {
-		it.second->sendChannelEvent(id, invitePlayer.getName(), CHANNELEVENT_INVITE);
-	}
 }
 
 void PrivateChatChannel::excludePlayer(const Player& player, Player& excludePlayer)
@@ -51,10 +47,6 @@ void PrivateChatChannel::excludePlayer(const Player& player, Player& excludePlay
 	player.sendTextMessage(MESSAGE_INFO_DESCR, fmt::format("{:s} has been excluded.", excludePlayer.getName()));
 
 	excludePlayer.sendClosePrivate(id);
-
-	for (const auto& it : users) {
-		it.second->sendChannelEvent(id, excludePlayer.getName(), CHANNELEVENT_EXCLUDE);
-	}
 }
 
 void PrivateChatChannel::closeChannel() const
@@ -83,12 +75,6 @@ bool ChatChannel::addUser(Player& player)
 		}
 	}
 
-	if (!publicChannel) {
-		for (const auto& it : users) {
-			it.second->sendChannelEvent(id, player.getName(), CHANNELEVENT_JOIN);
-		}
-	}
-
 	users[player.getID()] = &player;
 	return true;
 }
@@ -101,12 +87,6 @@ bool ChatChannel::removeUser(const Player& player)
 	}
 
 	users.erase(iter);
-
-	if (!publicChannel) {
-		for (const auto& it : users) {
-			it.second->sendChannelEvent(id, player.getName(), CHANNELEVENT_LEAVE);
-		}
-	}
 
 	executeOnLeaveEvent(player);
 	return true;

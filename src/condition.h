@@ -43,8 +43,6 @@ enum ConditionAttr_t
 	CONDITIONATTR_ISAGGRESSIVE,
 	CONDITIONATTR_DISABLEDEFENSE,
 	CONDITIONATTR_SPECIALSKILLS,
-	CONDITIONATTR_MANASHIELD_BREAKABLE_MANA,
-	CONDITIONATTR_MANASHIELD_BREAKABLE_MAXMANA,
 
 	// reserved for serialization
 	CONDITIONATTR_END = 254,
@@ -159,7 +157,6 @@ public:
 private:
 	int32_t skills[SKILL_LAST + 1] = {};
 	int32_t skillsPercent[SKILL_LAST + 1] = {};
-	int32_t specialSkills[SPECIALSKILL_LAST + 1] = {};
 	int32_t stats[STAT_LAST + 1] = {};
 	int32_t statsPercent[STAT_LAST + 1] = {};
 	int32_t currentSkill = 0;
@@ -388,34 +385,6 @@ private:
 	uint32_t lightChangeInterval = 0;
 };
 
-class ConditionSpellCooldown final : public ConditionGeneric
-{
-public:
-	ConditionSpellCooldown(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false, uint32_t subId = 0,
-	                       bool aggressive = false) :
-	    ConditionGeneric(id, type, ticks, buff, subId, aggressive)
-	{}
-
-	bool startCondition(Creature* creature) override;
-	void addCondition(Creature* creature, const Condition* condition) override;
-
-	ConditionSpellCooldown* clone() const override { return new ConditionSpellCooldown(*this); }
-};
-
-class ConditionSpellGroupCooldown final : public ConditionGeneric
-{
-public:
-	ConditionSpellGroupCooldown(ConditionId_t id, ConditionType_t type, int32_t ticks, bool buff = false,
-	                            uint32_t subId = 0, bool aggressive = false) :
-	    ConditionGeneric(id, type, ticks, buff, subId, aggressive)
-	{}
-
-	bool startCondition(Creature* creature) override;
-	void addCondition(Creature* creature, const Condition* condition) override;
-
-	ConditionSpellGroupCooldown* clone() const override { return new ConditionSpellGroupCooldown(*this); }
-};
-
 class ConditionDrunk final : public Condition
 {
 public:
@@ -440,36 +409,6 @@ private:
 	uint8_t drunkenness = 25;
 
 	bool updateCondition(const Condition* addCondition) override;
-};
-
-class ConditionManaShield final : public Condition
-{
-public:
-	ConditionManaShield(ConditionId_t initId, ConditionType_t initType, int32_t iniTicks, bool initBuff = false,
-	                    uint32_t initSubId = 0) :
-	    Condition(initId, initType, iniTicks, initBuff, initSubId)
-	{}
-
-	bool startCondition(Creature* creature) override;
-	void endCondition(Creature* creature) override;
-	void addCondition(Creature* creature, const Condition* addCondition) override;
-	uint32_t getIcons() const override;
-
-	bool setParam(ConditionParam_t param, int32_t value) override;
-
-	ConditionManaShield* clone() const override { return new ConditionManaShield(*this); }
-
-	// serialization
-	void serialize(PropWriteStream& propWriteStream) override;
-	bool unserializeProp(ConditionAttr_t attr, PropStream& propStream) override;
-	int32_t onDamageTaken(Player* player, int32_t manaChange);
-
-	uint16_t getManaShield() { return manaShield; }
-	uint16_t getMaxManaShield() { return maxManaShield; }
-
-private:
-	uint16_t manaShield = 0;
-	uint16_t maxManaShield = 0;
 };
 
 #endif // FS_CONDITION_H

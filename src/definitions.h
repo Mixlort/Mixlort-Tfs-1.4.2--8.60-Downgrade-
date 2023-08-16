@@ -5,12 +5,12 @@
 #define FS_DEFINITIONS_H
 
 static constexpr auto STATUS_SERVER_NAME = "The Forgotten Server";
-static constexpr auto STATUS_SERVER_VERSION = "1.5";
+static constexpr auto STATUS_SERVER_VERSION = "1.5 8.60-Mixlort";
 static constexpr auto STATUS_SERVER_DEVELOPERS = "The Forgotten Server Team";
 
-static constexpr auto CLIENT_VERSION_MIN = 1280;
-static constexpr auto CLIENT_VERSION_MAX = 1288;
-static constexpr auto CLIENT_VERSION_STR = "12.87";
+static constexpr auto CLIENT_VERSION_MIN = 860;
+static constexpr auto CLIENT_VERSION_MAX = 860;
+static constexpr auto CLIENT_VERSION_STR = "8.60";
 
 static constexpr auto AUTHENTICATOR_DIGITS = 6U;
 static constexpr auto AUTHENTICATOR_PERIOD = 30U;
@@ -47,6 +47,7 @@ static constexpr auto AUTHENTICATOR_PERIOD = 30U;
 #pragma warning(disable : 4319) // '~': zero extending 'unsigned int' to 'lua_Number' of greater size
 #pragma warning(disable : 4351) // new behavior: elements of array will be default initialized
 #pragma warning(disable : 4458) // declaration hides class member
+#pragma warning(disable : 4996) //gethostbyname is deprecated
 #endif
 
 #ifndef _WIN32_WINNT

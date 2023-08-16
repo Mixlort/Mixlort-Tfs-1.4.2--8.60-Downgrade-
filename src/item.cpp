@@ -11,7 +11,6 @@
 #include "game.h"
 #include "house.h"
 #include "mailbox.h"
-#include "podium.h"
 #include "teleport.h"
 #include "trashholder.h"
 
@@ -53,8 +52,6 @@ Item* Item::CreateItem(const uint16_t type, uint16_t count /*= 0*/)
 			newItem = new Mailbox(type);
 		} else if (it.isBed()) {
 			newItem = new BedItem(type);
-		} else if (it.isPodium()) {
-			newItem = new Podium(type);
 		} else {
 			newItem = new Item(type, count);
 		}
@@ -566,26 +563,6 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 			break;
 		}
 
-		case ATTR_WRAPID: {
-			uint16_t wrapId;
-			if (!propStream.read<uint16_t>(wrapId)) {
-				return ATTR_READ_ERROR;
-			}
-
-			setIntAttr(ITEM_ATTRIBUTE_WRAPID, wrapId);
-			break;
-		}
-
-		case ATTR_STOREITEM: {
-			uint8_t storeItem;
-			if (!propStream.read<uint8_t>(storeItem)) {
-				return ATTR_READ_ERROR;
-			}
-
-			setIntAttr(ITEM_ATTRIBUTE_STOREITEM, storeItem);
-			break;
-		}
-
 		case ATTR_OPENCONTAINER: {
 			uint8_t openContainer;
 			if (!propStream.read<uint8_t>(openContainer)) {
@@ -664,14 +641,6 @@ Attr_ReadValue Item::readAttr(AttrTypes_t attr, PropStream& propStream)
 
 		case ATTR_SLEEPSTART: {
 			if (!propStream.skip(4)) {
-				return ATTR_READ_ERROR;
-			}
-			break;
-		}
-
-		// Podium class
-		case ATTR_PODIUMOUTFIT: {
-			if (!propStream.skip(15)) {
 				return ATTR_READ_ERROR;
 			}
 			break;
@@ -855,16 +824,6 @@ void Item::serializeAttr(PropWriteStream& propWriteStream) const
 	if (hasAttribute(ITEM_ATTRIBUTE_DECAYTO)) {
 		propWriteStream.write<uint8_t>(ATTR_DECAYTO);
 		propWriteStream.write<int32_t>(getIntAttr(ITEM_ATTRIBUTE_DECAYTO));
-	}
-
-	if (hasAttribute(ITEM_ATTRIBUTE_WRAPID)) {
-		propWriteStream.write<uint8_t>(ATTR_WRAPID);
-		propWriteStream.write<uint16_t>(getIntAttr(ITEM_ATTRIBUTE_WRAPID));
-	}
-
-	if (hasAttribute(ITEM_ATTRIBUTE_STOREITEM)) {
-		propWriteStream.write<uint8_t>(ATTR_STOREITEM);
-		propWriteStream.write<uint8_t>(getIntAttr(ITEM_ATTRIBUTE_STOREITEM));
 	}
 
 	if (hasAttribute(ITEM_ATTRIBUTE_OPENCONTAINER)) {
@@ -1219,43 +1178,6 @@ ItemAttributes::Attribute& ItemAttributes::getAttr(itemAttrTypes type)
 }
 
 void Item::startDecaying() { g_game.startDecay(this); }
-
-bool Item::hasMarketAttributes() const
-{
-	if (!attributes) {
-		return true;
-	}
-
-	// discard items with custom boost and reflect
-	for (uint16_t i = 0; i < COMBAT_COUNT; ++i) {
-		if (getBoostPercent(indexToCombatType(i), false) > 0) {
-			return false;
-		}
-
-		Reflect tmpReflect = getReflect(indexToCombatType(i), false);
-		if (tmpReflect.chance != 0 || tmpReflect.percent != 0) {
-			return false;
-		}
-	}
-
-	// discard items with other modified attributes
-	for (const auto& attr : attributes->getList()) {
-		if (attr.type == ITEM_ATTRIBUTE_CHARGES) {
-			uint16_t charges = static_cast<uint16_t>(attr.value.integer);
-			if (charges != items[id].charges) {
-				return false;
-			}
-		} else if (attr.type == ITEM_ATTRIBUTE_DURATION) {
-			uint32_t duration = static_cast<uint32_t>(attr.value.integer);
-			if (duration != getDefaultDuration()) {
-				return false;
-			}
-		} else {
-			return false;
-		}
-	}
-	return true;
-}
 
 template <>
 const std::string& ItemAttributes::CustomAttribute::get<std::string>()

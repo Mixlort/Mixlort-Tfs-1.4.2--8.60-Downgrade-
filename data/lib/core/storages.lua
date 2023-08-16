@@ -25,16 +25,6 @@ PlayerStorageKeys = {
 	madSheepSummon = 30023,
 	crateUsable = 30024,
 	-- empty: 30025
-	afflictedOutfit = 30026,
-	afflictedPlagueMask = 30027,
-	afflictedPlagueBell = 30028,
-	-- empty: 30029
-	-- empty: 30030
-	nailCaseUseCount = 30031,
-	swampDigging = 30032,
-	insectoidCell = 30033,
-	vortexTamer = 30034,
-	mutatedPumpkin = 30035,
 
 	-- Achievements:
 	achievementsTotal = 19999,

@@ -15,7 +15,6 @@ class Door;
 class MagicField;
 class Mailbox;
 class Player;
-class Podium;
 class Teleport;
 class TrashHolder;
 
@@ -85,12 +84,8 @@ enum AttrTypes_t
 	ATTR_SHOOTRANGE = 33,
 	ATTR_CUSTOM_ATTRIBUTES = 34,
 	ATTR_DECAYTO = 35,
-	ATTR_WRAPID = 36,
-	ATTR_STOREITEM = 37,
 	ATTR_ATTACK_SPEED = 38,
 	ATTR_OPENCONTAINER = 39,
-	ATTR_PODIUMOUTFIT = 40,
-	// ATTR_TIER = 41, // mapeditor
 	ATTR_REFLECT = 42,
 	ATTR_BOOST = 43,
 };
@@ -463,8 +458,7 @@ private:
 	    ITEM_ATTRIBUTE_ATTACK | ITEM_ATTRIBUTE_DEFENSE | ITEM_ATTRIBUTE_EXTRADEFENSE | ITEM_ATTRIBUTE_ARMOR |
 	    ITEM_ATTRIBUTE_HITCHANCE | ITEM_ATTRIBUTE_SHOOTRANGE | ITEM_ATTRIBUTE_OWNER | ITEM_ATTRIBUTE_DURATION |
 	    ITEM_ATTRIBUTE_DECAYSTATE | ITEM_ATTRIBUTE_CORPSEOWNER | ITEM_ATTRIBUTE_CHARGES | ITEM_ATTRIBUTE_FLUIDTYPE |
-	    ITEM_ATTRIBUTE_DOORID | ITEM_ATTRIBUTE_DECAYTO | ITEM_ATTRIBUTE_WRAPID | ITEM_ATTRIBUTE_STOREITEM |
-	    ITEM_ATTRIBUTE_ATTACK_SPEED | ITEM_ATTRIBUTE_OPENCONTAINER;
+	    ITEM_ATTRIBUTE_DOORID | ITEM_ATTRIBUTE_DECAYTO | ITEM_ATTRIBUTE_ATTACK_SPEED | ITEM_ATTRIBUTE_OPENCONTAINER;
 	const static uint32_t stringAttributeTypes = ITEM_ATTRIBUTE_DESCRIPTION | ITEM_ATTRIBUTE_TEXT |
 	                                             ITEM_ATTRIBUTE_WRITER | ITEM_ATTRIBUTE_NAME | ITEM_ATTRIBUTE_ARTICLE |
 	                                             ITEM_ATTRIBUTE_PLURALNAME;
@@ -514,8 +508,6 @@ public:
 	virtual const MagicField* getMagicField() const { return nullptr; }
 	virtual BedItem* getBed() { return nullptr; }
 	virtual const BedItem* getBed() const { return nullptr; }
-	virtual Podium* getPodium() { return nullptr; }
-	virtual const Podium* getPodium() const { return nullptr; }
 
 	const std::string& getStrAttr(itemAttrTypes type) const
 	{
@@ -815,18 +807,8 @@ public:
 		const ItemType& it = items[id];
 		return it.rotatable && it.rotateTo;
 	}
-	bool isPodium() const { return items[id].isPodium(); }
 	bool hasWalkStack() const { return items[id].walkStack; }
-	bool isSupply() const { return items[id].isSupply(); }
 
-	void setStoreItem(bool storeItem) { setIntAttr(ITEM_ATTRIBUTE_STOREITEM, static_cast<int64_t>(storeItem)); }
-	bool isStoreItem() const
-	{
-		if (hasAttribute(ITEM_ATTRIBUTE_STOREITEM)) {
-			return getIntAttr(ITEM_ATTRIBUTE_STOREITEM) == 1;
-		}
-		return items[id].storeItem;
-	}
 	const std::string& getName() const
 	{
 		if (hasAttribute(ITEM_ATTRIBUTE_NAME)) {
@@ -892,8 +874,6 @@ public:
 		return !loadedFromMap && canRemove() && isPickupable() && !hasAttribute(ITEM_ATTRIBUTE_UNIQUEID) &&
 		       !hasAttribute(ITEM_ATTRIBUTE_ACTIONID);
 	}
-
-	bool hasMarketAttributes() const;
 
 	std::unique_ptr<ItemAttributes>& getAttributes()
 	{

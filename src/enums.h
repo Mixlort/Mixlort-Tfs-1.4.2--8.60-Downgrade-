@@ -36,14 +36,6 @@ enum RuleViolationReasons_t : uint8_t
 	REPORT_REASON_SERVICEAGREEMENT = 20
 };
 
-enum BugReportType_t : uint8_t
-{
-	BUG_CATEGORY_MAP = 0,
-	BUG_CATEGORY_TYPO = 1,
-	BUG_CATEGORY_TECHNICAL = 2,
-	BUG_CATEGORY_OTHER = 3
-};
-
 enum ThreadState
 {
 	THREAD_STATE_RUNNING,
@@ -79,8 +71,6 @@ enum itemAttrTypes : uint32_t
 	ITEM_ATTRIBUTE_FLUIDTYPE = 1 << 21,
 	ITEM_ATTRIBUTE_DOORID = 1 << 22,
 	ITEM_ATTRIBUTE_DECAYTO = 1 << 23,
-	ITEM_ATTRIBUTE_WRAPID = 1 << 24,
-	ITEM_ATTRIBUTE_STOREITEM = 1 << 25,
 	ITEM_ATTRIBUTE_ATTACK_SPEED = 1 << 26,
 	ITEM_ATTRIBUTE_OPENCONTAINER = 1 << 27,
 
@@ -90,32 +80,7 @@ enum itemAttrTypes : uint32_t
 enum VipStatus_t : uint8_t
 {
 	VIPSTATUS_OFFLINE = 0,
-	VIPSTATUS_ONLINE = 1,
-	VIPSTATUS_PENDING = 2,
-	VIPSTATUS_TRAINING = 3
-};
-
-enum MarketAction_t
-{
-	MARKETACTION_BUY = 0,
-	MARKETACTION_SELL = 1,
-};
-
-enum MarketRequest_t
-{
-	MARKETREQUEST_OWN_HISTORY = 1,
-	MARKETREQUEST_OWN_OFFERS = 2,
-	MARKETREQUEST_ITEM = 3,
-};
-
-enum MarketOfferState_t
-{
-	OFFERSTATE_ACTIVE = 0,
-	OFFERSTATE_CANCELLED = 1,
-	OFFERSTATE_EXPIRED = 2,
-	OFFERSTATE_ACCEPTED = 3,
-
-	OFFERSTATE_ACCEPTEDEX = 255,
+	VIPSTATUS_ONLINE = 1
 };
 
 enum ChannelEvent_t : uint8_t
@@ -191,7 +156,6 @@ enum RaceType_t : uint8_t
 	RACE_UNDEAD,
 	RACE_FIRE,
 	RACE_ENERGY,
-	RACE_INK,
 };
 
 enum CombatType_t : uint16_t
@@ -285,15 +249,8 @@ enum ConditionParam_t
 	CONDITION_PARAM_SUBID = 45,
 	CONDITION_PARAM_FIELD = 46,
 	CONDITION_PARAM_DISABLE_DEFENSE = 47,
-	CONDITION_PARAM_SPECIALSKILL_CRITICALHITCHANCE = 48,
-	CONDITION_PARAM_SPECIALSKILL_CRITICALHITAMOUNT = 49,
-	CONDITION_PARAM_SPECIALSKILL_LIFELEECHCHANCE = 50,
-	CONDITION_PARAM_SPECIALSKILL_LIFELEECHAMOUNT = 51,
-	CONDITION_PARAM_SPECIALSKILL_MANALEECHCHANCE = 52,
-	CONDITION_PARAM_SPECIALSKILL_MANALEECHAMOUNT = 53,
 	CONDITION_PARAM_AGGRESSIVE = 54,
 	CONDITION_PARAM_DRUNKENNESS = 55,
-	CONDITION_PARAM_MANASHIELD_BREAKABLE = 56,
 };
 
 enum BlockType_t : uint8_t
@@ -383,10 +340,7 @@ enum ConditionType_t
 	CONDITION_EXHAUST_COMBAT = 1 << 23, // unused
 	CONDITION_EXHAUST_HEAL = 1 << 24,   // unused
 	CONDITION_PACIFIED = 1 << 25,
-	CONDITION_SPELLCOOLDOWN = 1 << 26,
-	CONDITION_SPELLGROUPCOOLDOWN = 1 << 27,
 	CONDITION_ROOT = 1 << 28,
-	CONDITION_MANASHIELD_BREAKABLE = 1 << 29,
 };
 
 enum ConditionId_t : int8_t
@@ -487,24 +441,8 @@ enum ReturnValue
 	RETURNVALUE_TRADEPLAYERHIGHESTBIDDER,
 	RETURNVALUE_YOUCANNOTTRADETHISHOUSE,
 	RETURNVALUE_YOUDONTHAVEREQUIREDPROFESSION,
-	RETURNVALUE_CANNOTMOVEITEMISNOTSTOREITEM,
 	RETURNVALUE_ITEMCANNOTBEMOVEDTHERE,
 	RETURNVALUE_YOUCANNOTUSETHISBED,
-	RETURNVALUE_QUIVERAMMOONLY,
-};
-
-enum SpeechBubble_t
-{
-	SPEECHBUBBLE_NONE = 0,
-	SPEECHBUBBLE_NORMAL = 1,
-	SPEECHBUBBLE_TRADE = 2,
-	SPEECHBUBBLE_QUEST = 3,
-	SPEECHBUBBLE_COMPASS = 4,
-	SPEECHBUBBLE_NORMAL2 = 5,
-	SPEECHBUBBLE_NORMAL3 = 6,
-	SPEECHBUBBLE_HIRELING = 7,
-
-	SPEECHBUBBLE_LAST = SPEECHBUBBLE_HIRELING
 };
 
 enum MapMark_t
@@ -570,72 +508,6 @@ struct ShopInfo
 	{}
 };
 
-struct MarketOffer
-{
-	uint64_t price;
-	uint32_t timestamp;
-	uint16_t amount;
-	uint16_t counter;
-	uint16_t itemId;
-	std::string playerName;
-};
-
-struct MarketOfferEx
-{
-	MarketOfferEx() = default;
-	MarketOfferEx(MarketOfferEx&& other) :
-	    id(other.id),
-	    playerId(other.playerId),
-	    timestamp(other.timestamp),
-	    price(other.price),
-	    amount(other.amount),
-	    counter(other.counter),
-	    itemId(other.itemId),
-	    type(other.type),
-	    playerName(std::move(other.playerName))
-	{}
-
-	uint32_t id;
-	uint32_t playerId;
-	uint32_t timestamp;
-	uint64_t price;
-	uint16_t amount;
-	uint16_t counter;
-	uint16_t itemId;
-	MarketAction_t type;
-	std::string playerName;
-};
-
-struct HistoryMarketOffer
-{
-	uint32_t timestamp;
-	uint64_t price;
-	uint16_t itemId;
-	uint16_t amount;
-	MarketOfferState_t state;
-};
-
-struct MarketStatistics
-{
-	uint32_t numTransactions = 0;
-	uint32_t highestPrice = 0;
-	uint64_t totalPrice = 0;
-	uint32_t lowestPrice = 0;
-};
-
-struct ModalWindow
-{
-	std::list<std::pair<std::string, uint8_t>> buttons, choices;
-	std::string title, message;
-	uint32_t id;
-	uint8_t defaultEnterButton = 0xFF, defaultEscapeButton = 0xFF;
-	bool priority = false;
-
-	ModalWindow(uint32_t id, std::string title, std::string message) :
-	    title(std::move(title)), message(std::move(message)), id(id)
-	{}
-};
-
 enum CombatOrigin
 {
 	ORIGIN_NONE,
@@ -661,8 +533,6 @@ struct CombatDamage
 	bool leeched = false;
 };
 
-using MarketOfferList = std::list<MarketOffer>;
-using HistoryMarketOfferList = std::list<HistoryMarketOffer>;
 using ShopInfoList = std::list<ShopInfo>;
 
 enum MonstersEvent_t : uint8_t

@@ -17,7 +17,7 @@ namespace {
 boost::asio::ip::address getListenAddress()
 {
 	if (g_config.getBoolean(ConfigManager::BIND_ONLY_GLOBAL_ADDRESS)) {
-		return boost::asio::ip::address::from_string(g_config.getString(ConfigManager::IP));
+		return boost::asio::ip::address::from_string(g_config.getString(ConfigManager::IP_STRING));
 	}
 	return boost::asio::ip::address_v6::any();
 }

@@ -6,6 +6,7 @@
 
 #include "creature.h"
 #include "cylinder.h"
+#include "depotchest.h"
 #include "depotlocker.h"
 #include "enums.h"
 #include "groups.h"
@@ -14,7 +15,6 @@
 #include "town.h"
 #include "vocation.h"
 
-class DepotChest;
 class House;
 class NetworkMessage;
 class Npc;
@@ -35,14 +35,6 @@ enum fightMode_t : uint8_t
 	FIGHTMODE_DEFENSE = 3,
 };
 
-enum pvpMode_t : uint8_t
-{
-	PVP_MODE_DOVE = 0,
-	PVP_MODE_WHITE_HAND = 1,
-	PVP_MODE_YELLOW_HAND = 2,
-	PVP_MODE_RED_FIST = 3,
-};
-
 enum tradestate_t : uint8_t
 {
 	TRADE_NONE,
@@ -54,15 +46,11 @@ enum tradestate_t : uint8_t
 
 struct VIPEntry
 {
-	VIPEntry(uint32_t guid, std::string_view name, std::string_view description, uint32_t icon, bool notify) :
-	    guid{guid}, name{name}, description{description}, icon{icon}, notify{notify}
-	{}
+	VIPEntry(uint32_t guid, std::string_view name) :
+		guid(guid), name{name} {}
 
 	uint32_t guid;
 	std::string name;
-	std::string description;
-	uint32_t icon;
-	bool notify;
 };
 
 struct OpenContainer
@@ -152,21 +140,6 @@ public:
 
 	uint16_t getStaminaMinutes() const { return staminaMinutes; }
 
-	bool addOfflineTrainingTries(skills_t skill, uint64_t tries);
-
-	void addOfflineTrainingTime(int32_t addTime)
-	{
-		offlineTrainingTime = std::min<int32_t>(12 * 3600 * 1000, offlineTrainingTime + addTime);
-	}
-	void removeOfflineTrainingTime(int32_t removeTime)
-	{
-		offlineTrainingTime = std::max<int32_t>(0, offlineTrainingTime - removeTime);
-	}
-	int32_t getOfflineTrainingTime() const { return offlineTrainingTime; }
-
-	int32_t getOfflineTrainingSkill() const { return offlineTrainingSkill; }
-	void setOfflineTrainingSkill(int32_t skill) { offlineTrainingSkill = skill; }
-
 	uint64_t getBankBalance() const { return bankBalance; }
 	void setBankBalance(uint64_t balance) { bankBalance = balance; }
 
@@ -186,10 +159,6 @@ public:
 
 	void setLastWalkthroughAttempt(int64_t walkthroughAttempt) { lastWalkthroughAttempt = walkthroughAttempt; }
 	void setLastWalkthroughPosition(Position walkthroughPosition) { lastWalkthroughPosition = walkthroughPosition; }
-
-	Inbox* getInbox() const { return inbox; }
-
-	StoreInbox* getStoreInbox() const { return storeInbox; }
 
 	uint32_t getClientIcons() const;
 
@@ -259,8 +228,8 @@ public:
 	void setGroup(Group* newGroup) { group = newGroup; }
 	Group* getGroup() const { return group; }
 
-	void setInMarket(bool value) { inMarket = value; }
-	bool isInMarket() const { return inMarket; }
+	void setLastDepotId(int16_t newId) { lastDepotId = newId; }
+	int16_t getLastDepotId() const { return lastDepotId; }
 
 	int32_t getIdleTime() const { return idleTime; }
 
@@ -301,10 +270,6 @@ public:
 	const Position& getTemplePosition() const { return town->getTemplePosition(); }
 	Town* getTown() const { return town; }
 	void setTown(Town* town) { this->town = town; }
-
-	void clearModalWindows();
-	bool hasModalWindowOpen(uint32_t modalWindowId) const;
-	void onModalWindowHandled(uint32_t modalWindowId);
 
 	bool isPushable() const override;
 	uint32_t isMuted() const;
@@ -363,7 +328,7 @@ public:
 	void removeConditionSuppressions(uint32_t conditions);
 
 	DepotChest* getDepotChest(uint32_t depotId, bool autoCreate);
-	DepotLocker& getDepotLocker();
+	DepotLocker* getDepotLocker(uint32_t depotId);
 	void onReceiveMail() const;
 	bool isNearDepotBox() const;
 
@@ -409,7 +374,6 @@ public:
 	bool removeVIP(uint32_t vipGuid);
 	bool addVIP(uint32_t vipGuid, const std::string& vipName, VipStatus_t status);
 	bool addVIPInternal(uint32_t vipGuid);
-	bool editVIP(uint32_t vipGuid, const std::string& description, uint32_t icon, bool notify);
 
 	// follow functions
 	bool setFollowCreature(Creature* creature) override;
@@ -424,7 +388,7 @@ public:
 	void onWalkComplete() override;
 
 	void stopWalk();
-	void openShopWindow(Npc* npc, const std::list<ShopInfo>& shop);
+	void openShopWindow(const std::list<ShopInfo>& shop);
 	bool closeShopWindow(bool sendCloseShopWindow = true);
 	bool updateSaleShopList(const Item* item);
 	bool hasShopItemForSale(uint32_t itemId, uint8_t subType) const;
@@ -483,6 +447,9 @@ public:
 	int32_t getDefense() const override;
 	float getAttackFactor() const override;
 	float getDefenseFactor() const override;
+
+	void addCombatExhaust(uint32_t ticks);
+	void addHealExhaust(uint32_t ticks);
 
 	void addInFightTicks(bool pzlock = false);
 
@@ -589,12 +556,6 @@ public:
 			client->sendChannelMessage(author, text, type, channel);
 		}
 	}
-	void sendChannelEvent(uint16_t channelId, const std::string& playerName, ChannelEvent_t channelEvent)
-	{
-		if (client) {
-			client->sendChannelEvent(channelId, playerName, channelEvent);
-		}
-	}
 	void sendCreatureAppear(const Creature* creature, const Position& pos,
 	                        MagicEffectClasses magicEffect = CONST_ME_NONE)
 	{
@@ -690,31 +651,11 @@ public:
 			client->sendCreatureShield(creature);
 		}
 	}
-	void sendSpellCooldown(uint8_t spellId, uint32_t time)
-	{
+	void sendAnimatedText(const std::string& message, const Position& pos, TextColor_t color) {
 		if (client) {
-			client->sendSpellCooldown(spellId, time);
+			client->sendAnimatedText(message, pos, color);
 		}
 	}
-	void sendSpellGroupCooldown(SpellGroup_t groupId, uint32_t time)
-	{
-		if (client) {
-			client->sendSpellGroupCooldown(groupId, time);
-		}
-	}
-	void sendUseItemCooldown(uint32_t time)
-	{
-		if (client) {
-			client->sendUseItemCooldown(time);
-		}
-	}
-	void sendSupplyUsed(const uint16_t clientId) const
-	{
-		if (client) {
-			client->sendSupplyUsed(clientId);
-		}
-	}
-	void sendModalWindow(const ModalWindow& modalWindow);
 
 	// container
 	void sendAddContainerItem(const Container* container, const Item* item);
@@ -732,38 +673,6 @@ public:
 	{
 		if (client) {
 			client->sendInventoryItem(slot, item);
-		}
-	}
-	void sendItems()
-	{
-		if (client) {
-			client->sendItems();
-		}
-	}
-	void openSavedContainers();
-	void sendQuiverUpdate(bool sendAll = false)
-	{
-		if (!sendAll) {
-			// update one slot
-			Thing* slotThing = getThing(CONST_SLOT_RIGHT);
-			if (slotThing) {
-				Item* slotItem = slotThing->getItem();
-				if (slotItem && slotItem->getWeaponType() == WEAPON_QUIVER) {
-					sendInventoryItem(CONST_SLOT_RIGHT, slotItem);
-				}
-			}
-		} else {
-			// update all slots
-			std::vector<slots_t> slots = {CONST_SLOT_RIGHT, CONST_SLOT_LEFT, CONST_SLOT_AMMO};
-			for (auto const& slot : slots) {
-				Thing* slotThing = getThing(slot);
-				if (slotThing) {
-					Item* slotItem = slotThing->getItem();
-					if (slotItem && slotItem->getWeaponType() == WEAPON_QUIVER) {
-						sendInventoryItem(slot, slotItem);
-					}
-				}
-			}
 		}
 	}
 
@@ -851,27 +760,8 @@ public:
 		}
 	}
 	void sendPing();
-	void sendPingBack() const
-	{
-		if (client) {
-			client->sendPingBack();
-		}
-	}
 	void sendStats();
 
-	void sendExperienceTracker(int64_t rawExp, int64_t finalExp) const
-	{
-		if (client) {
-			client->sendExperienceTracker(rawExp, finalExp);
-		}
-	}
-
-	void sendBasicData() const
-	{
-		if (client) {
-			client->sendBasicData();
-		}
-	}
 	void sendSkills() const
 	{
 		if (client) {
@@ -890,10 +780,10 @@ public:
 			client->sendTextMessage(message);
 		}
 	}
-	void sendReLoginWindow(uint8_t unfairFightReduction) const
+	void sendReLoginWindow() const
 	{
 		if (client) {
-			client->sendReLoginWindow(unfairFightReduction);
+			client->sendReLoginWindow();
 		}
 	}
 	void sendTextWindow(Item* item, uint16_t maxlen, bool canWrite) const
@@ -914,10 +804,10 @@ public:
 			client->sendToChannel(creature, type, text, channelId);
 		}
 	}
-	void sendShop(Npc* npc) const
+	void sendShop() const
 	{
 		if (client) {
-			client->sendShop(npc, shopItemList);
+			client->sendShop(shopItemList);
 		}
 	}
 	void sendSaleItemList() const
@@ -930,51 +820,6 @@ public:
 	{
 		if (client) {
 			client->sendCloseShop();
-		}
-	}
-	void sendMarketEnter() const
-	{
-		if (client) {
-			client->sendMarketEnter();
-		}
-	}
-	void sendMarketLeave()
-	{
-		inMarket = false;
-		if (client) {
-			client->sendMarketLeave();
-		}
-	}
-	void sendMarketBrowseItem(uint16_t itemId, const MarketOfferList& buyOffers,
-	                          const MarketOfferList& sellOffers) const
-	{
-		if (client) {
-			client->sendMarketBrowseItem(itemId, buyOffers, sellOffers);
-		}
-	}
-	void sendMarketBrowseOwnOffers(const MarketOfferList& buyOffers, const MarketOfferList& sellOffers) const
-	{
-		if (client) {
-			client->sendMarketBrowseOwnOffers(buyOffers, sellOffers);
-		}
-	}
-	void sendMarketBrowseOwnHistory(const HistoryMarketOfferList& buyOffers,
-	                                const HistoryMarketOfferList& sellOffers) const
-	{
-		if (client) {
-			client->sendMarketBrowseOwnHistory(buyOffers, sellOffers);
-		}
-	}
-	void sendMarketAcceptOffer(const MarketOfferEx& offer) const
-	{
-		if (client) {
-			client->sendMarketAcceptOffer(offer);
-		}
-	}
-	void sendMarketCancelOffer(const MarketOfferEx& offer) const
-	{
-		if (client) {
-			client->sendMarketCancelOffer(offer);
 		}
 	}
 	void sendTradeItemRequest(const std::string& traderName, const Item* item, bool ack) const
@@ -995,12 +840,6 @@ public:
 			client->sendWorldLight(lightInfo);
 		}
 	}
-	void sendWorldTime()
-	{
-		if (client) {
-			client->sendWorldTime();
-		}
-	}
 	void sendChannelsDialog()
 	{
 		if (client) {
@@ -1019,12 +858,6 @@ public:
 			client->sendOutfitWindow();
 		}
 	}
-	void sendPodiumWindow(const Item* item)
-	{
-		if (client) {
-			client->sendPodiumWindow(item);
-		}
-	}
 	void sendCloseContainer(uint8_t cid)
 	{
 		if (client) {
@@ -1032,11 +865,10 @@ public:
 		}
 	}
 
-	void sendChannel(uint16_t channelId, const std::string& channelName, const UsersMap* channelUsers,
-	                 const InvitedMap* invitedUsers)
+	void sendChannel(uint16_t channelId, const std::string& channelName)
 	{
 		if (client) {
-			client->sendChannel(channelId, channelName, channelUsers, invitedUsers);
+			client->sendChannel(channelId, channelName);
 		}
 	}
 	void sendTutorial(uint8_t tutorialId)
@@ -1051,12 +883,6 @@ public:
 			client->sendAddMarker(pos, markType, desc);
 		}
 	}
-	void sendEnterWorld()
-	{
-		if (client) {
-			client->sendEnterWorld();
-		}
-	}
 	void sendFightModes()
 	{
 		if (client) {
@@ -1067,13 +893,6 @@ public:
 	{
 		if (client) {
 			client->writeToOutputBuffer(message);
-		}
-	}
-	void sendCombatAnalyzer(CombatType_t type, int32_t amount, DamageAnalyzerImpactType impactType,
-	                        const std::string& target)
-	{
-		if (client) {
-			client->sendCombatAnalyzer(type, amount, impactType, target);
 		}
 	}
 
@@ -1170,7 +989,8 @@ private:
 	std::unordered_set<uint32_t> VIPList;
 
 	std::map<uint8_t, OpenContainer> openContainers;
-	std::map<uint32_t, DepotChest*> depotChests;
+	std::map<uint32_t, DepotLocker_ptr> depotLockerMap;
+	std::map<uint32_t, DepotChest_ptr> depotChests;
 
 	std::vector<OutfitEntry> outfits;
 	GuildWarVector guildWarVector;
@@ -1178,7 +998,6 @@ private:
 	std::list<ShopInfo> shopItemList;
 
 	std::forward_list<Party*> invitePartyList;
-	std::forward_list<uint32_t> modalWindows;
 	std::forward_list<std::string> learnedInstantSpellList;
 	std::forward_list<Condition*>
 	    storedConditionList; // TODO: This variable is only temporarily used when logging in, get rid of it somehow
@@ -1213,7 +1032,6 @@ private:
 	Guild* guild = nullptr;
 	GuildRank_ptr guildRank = nullptr;
 	Group* group = nullptr;
-	Inbox* inbox;
 	Item* tradeItem = nullptr;
 	Item* inventory[CONST_SLOT_LAST + 1] = {};
 	Item* writeItem = nullptr;
@@ -1224,8 +1042,6 @@ private:
 	SchedulerTask* walkTask = nullptr;
 	Town* town = nullptr;
 	Vocation* vocation = nullptr;
-	StoreInbox* storeInbox = nullptr;
-	DepotLocker_ptr depotLocker = nullptr;
 
 	uint32_t inventoryWeight = 0;
 	uint32_t capacity = 40000;
@@ -1246,8 +1062,8 @@ private:
 	uint32_t manaMax = 0;
 	uint16_t manaShieldBar = 0;
 	uint16_t maxManaShieldBar = 0;
-	int32_t varSkills[SKILL_LAST + 1] = {};
 	int32_t varSpecialSkills[SPECIALSKILL_LAST + 1] = {};
+	int32_t varSkills[SKILL_LAST + 1] = {};
 	int32_t varStats[STAT_LAST + 1] = {};
 	std::array<int16_t, COMBAT_COUNT> specialMagicLevelSkill = {0};
 	int32_t purchaseCallback = -1;
@@ -1255,13 +1071,11 @@ private:
 	int32_t MessageBufferCount = 0;
 	int32_t bloodHitCount = 0;
 	int32_t shieldBlockCount = 0;
-	int32_t offlineTrainingSkill = -1;
-	int32_t offlineTrainingTime = 0;
 	int32_t idleTime = 0;
 
-	uint16_t lastStatsTrainingTime = 0;
 	uint16_t staminaMinutes = 2520;
 	uint16_t maxWriteLen = 0;
+	int16_t lastDepotId = -1;
 	uint16_t clientExpDisplay = 100;
 	uint16_t clientStaminaBonusDisplay = 100;
 	uint16_t clientLowLevelBonusDisplay = 0;
@@ -1280,7 +1094,6 @@ private:
 
 	bool chaseMode = false;
 	bool secureMode = false;
-	bool inMarket = false;
 	bool wasMounted = false;
 	bool ghostMode = false;
 	bool pzLocked = false;

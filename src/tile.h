@@ -7,12 +7,12 @@
 #include "cylinder.h"
 #include "item.h"
 #include "tools.h"
+#include "spectators.h"
 
 class BedItem;
 class Creature;
 class MagicField;
 class Mailbox;
-class SpectatorVec;
 class Teleport;
 class TrashHolder;
 

@@ -38,7 +38,7 @@ public:
 	                            cylinderlink_t link = LINK_OWNER) override;
 
 private:
-	bool getReceiver(Item* item, std::string& name) const;
+	bool getReceiver(Item* item, std::string& name, uint32_t& depotId) const;
 	bool sendItem(Item* item) const;
 
 	static bool canSend(const Item* item);

@@ -34,7 +34,6 @@ enum slots_t : uint8_t
 	CONST_SLOT_FEET = 8,
 	CONST_SLOT_RING = 9,
 	CONST_SLOT_AMMO = 10,
-	CONST_SLOT_STORE_INBOX = 11,
 
 	CONST_SLOT_FIRST = CONST_SLOT_HEAD,
 	CONST_SLOT_LAST = CONST_SLOT_AMMO,
@@ -215,8 +214,6 @@ public:
 	virtual int32_t getDefense() const { return 0; }
 	virtual float getAttackFactor() const { return 1.0f; }
 	virtual float getDefenseFactor() const { return 1.0f; }
-
-	virtual uint8_t getSpeechBubble() const { return SPEECHBUBBLE_NONE; }
 
 	bool addCondition(Condition* condition, bool force = false);
 	bool addCombatCondition(Condition* condition);

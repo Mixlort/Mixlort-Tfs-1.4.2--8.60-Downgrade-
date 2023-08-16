@@ -50,7 +50,6 @@ enum LuaDataType
 	LuaData_Item,
 	LuaData_Container,
 	LuaData_Teleport,
-	LuaData_Podium,
 	LuaData_Player,
 	LuaData_Monster,
 	LuaData_Npc,
@@ -436,6 +435,9 @@ private:
 	static int luaIsMoveable(lua_State* L);
 	static int luaIsValidUID(lua_State* L);
 
+	//container
+	static int luaDoAddContainerItem(lua_State* L);
+
 	//
 	static int luaCreateCombatArea(lua_State* L);
 
@@ -543,6 +545,7 @@ private:
 	static int luaGameCreateMonsterType(lua_State* L);
 
 	static int luaGameStartRaid(lua_State* L);
+	static int luaGameSendAnimatedText(lua_State* L);
 
 	static int luaGameGetClientVersion(lua_State* L);
 
@@ -639,34 +642,6 @@ private:
 	static int luaNetworkMessageSkipBytes(lua_State* L);
 	static int luaNetworkMessageSendToPlayer(lua_State* L);
 
-	// ModalWindow
-	static int luaModalWindowCreate(lua_State* L);
-	static int luaModalWindowDelete(lua_State* L);
-
-	static int luaModalWindowGetId(lua_State* L);
-	static int luaModalWindowGetTitle(lua_State* L);
-	static int luaModalWindowGetMessage(lua_State* L);
-
-	static int luaModalWindowSetTitle(lua_State* L);
-	static int luaModalWindowSetMessage(lua_State* L);
-
-	static int luaModalWindowGetButtonCount(lua_State* L);
-	static int luaModalWindowGetChoiceCount(lua_State* L);
-
-	static int luaModalWindowAddButton(lua_State* L);
-	static int luaModalWindowAddChoice(lua_State* L);
-
-	static int luaModalWindowGetDefaultEnterButton(lua_State* L);
-	static int luaModalWindowSetDefaultEnterButton(lua_State* L);
-
-	static int luaModalWindowGetDefaultEscapeButton(lua_State* L);
-	static int luaModalWindowSetDefaultEscapeButton(lua_State* L);
-
-	static int luaModalWindowHasPriority(lua_State* L);
-	static int luaModalWindowSetPriority(lua_State* L);
-
-	static int luaModalWindowSendToPlayer(lua_State* L);
-
 	// Item
 	static int luaItemCreate(lua_State* L);
 
@@ -717,9 +692,6 @@ private:
 	static int luaItemHasProperty(lua_State* L);
 	static int luaItemIsLoadedFromMap(lua_State* L);
 
-	static int luaItemSetStoreItem(lua_State* L);
-	static int luaItemIsStoreItem(lua_State* L);
-
 	static int luaItemSetReflect(lua_State* L);
 	static int luaItemGetReflect(lua_State* L);
 
@@ -747,16 +719,6 @@ private:
 
 	static int luaTeleportGetDestination(lua_State* L);
 	static int luaTeleportSetDestination(lua_State* L);
-
-	// Podium
-	static int luaPodiumCreate(lua_State* L);
-
-	static int luaPodiumGetOutfit(lua_State* L);
-	static int luaPodiumSetOutfit(lua_State* L);
-	static int luaPodiumHasFlag(lua_State* L);
-	static int luaPodiumSetFlag(lua_State* L);
-	static int luaPodiumGetDirection(lua_State* L);
-	static int luaPodiumSetDirection(lua_State* L);
 
 	// Creature
 	static int luaCreatureCreate(lua_State* L);
@@ -863,7 +825,6 @@ private:
 	static int luaPlayerGetFreeCapacity(lua_State* L);
 
 	static int luaPlayerGetDepotChest(lua_State* L);
-	static int luaPlayerGetInbox(lua_State* L);
 
 	static int luaPlayerGetSkullTime(lua_State* L);
 	static int luaPlayerSetSkullTime(lua_State* L);
@@ -896,15 +857,6 @@ private:
 	static int luaPlayerRemoveSkillTries(lua_State* L);
 	static int luaPlayerGetSpecialSkill(lua_State* L);
 	static int luaPlayerAddSpecialSkill(lua_State* L);
-
-	static int luaPlayerAddOfflineTrainingTime(lua_State* L);
-	static int luaPlayerGetOfflineTrainingTime(lua_State* L);
-	static int luaPlayerRemoveOfflineTrainingTime(lua_State* L);
-
-	static int luaPlayerAddOfflineTrainingTries(lua_State* L);
-
-	static int luaPlayerGetOfflineTrainingSkill(lua_State* L);
-	static int luaPlayerSetOfflineTrainingSkill(lua_State* L);
 
 	static int luaPlayerGetItemCount(lua_State* L);
 	static int luaPlayerGetItemById(lua_State* L);
@@ -943,7 +895,6 @@ private:
 	static int luaPlayerAddItem(lua_State* L);
 	static int luaPlayerAddItemEx(lua_State* L);
 	static int luaPlayerRemoveItem(lua_State* L);
-	static int luaPlayerSendSupplyUsed(lua_State* L);
 
 	static int luaPlayerGetMoney(lua_State* L);
 	static int luaPlayerAddMoney(lua_State* L);
@@ -969,8 +920,6 @@ private:
 	static int luaPlayerHasOutfit(lua_State* L);
 	static int luaPlayerCanWearOutfit(lua_State* L);
 	static int luaPlayerSendOutfitWindow(lua_State* L);
-
-	static int luaPlayerSendEditPodium(lua_State* L);
 
 	static int luaPlayerAddMount(lua_State* L);
 	static int luaPlayerRemoveMount(lua_State* L);
@@ -1015,10 +964,6 @@ private:
 	static int luaPlayerHasChaseMode(lua_State* L);
 	static int luaPlayerHasSecureMode(lua_State* L);
 	static int luaPlayerGetFightMode(lua_State* L);
-
-	static int luaPlayerGetStoreInbox(lua_State* L);
-
-	static int luaPlayerIsNearDepotBox(lua_State* L);
 
 	static int luaPlayerGetIdleTime(lua_State* L);
 	static int luaPlayerResetIdleTime(lua_State* L);
@@ -1075,9 +1020,6 @@ private:
 	static int luaNpcIsNpc(lua_State* L);
 
 	static int luaNpcSetMasterPos(lua_State* L);
-
-	static int luaNpcGetSpeechBubble(lua_State* L);
-	static int luaNpcSetSpeechBubble(lua_State* L);
 
 	static int luaNpcGetSpectators(lua_State* L);
 
@@ -1254,12 +1196,7 @@ private:
 	static int luaItemTypeGetMinReqLevel(lua_State* L);
 	static int luaItemTypeGetMinReqMagicLevel(lua_State* L);
 
-	static int luaItemTypeGetMarketBuyStatistics(lua_State* L);
-	static int luaItemTypeGetMarketSellStatistics(lua_State* L);
-
 	static int luaItemTypeHasSubType(lua_State* L);
-
-	static int luaItemTypeIsStoreItem(lua_State* L);
 
 	// Combat
 	static int luaCombatCreate(lua_State* L);

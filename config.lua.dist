@@ -15,6 +15,7 @@ whiteSkullTime = 15 * 60
 stairJumpExhaustion = 2000
 experienceByKillingPlayers = false
 expFromPlayersLevelRange = 75
+pzLockSkullAttacker = false
 
 -- Connection Config
 -- NOTE: maxPlayers set to 0 means no limit
@@ -68,9 +69,9 @@ maxMarketOffersAtATimePerPlayer = 100
 
 -- MySQL
 mysqlHost = "127.0.0.1"
-mysqlUser = "forgottenserver"
+mysqlUser = "root"
 mysqlPass = ""
-mysqlDatabase = "forgottenserver"
+mysqlDatabase = "testtfs"
 mysqlPort = 3306
 mysqlSock = ""
 
@@ -97,6 +98,7 @@ premiumToSendPrivate = false
 forceMonsterTypesOnLoad = true
 cleanProtectionZones = false
 checkDuplicateStorageKeys = false
+showPlayerLogInConsole = true
 
 -- VIP and Depot limits
 -- NOTE: you can set custom limits per group in data/XML/groups.xml

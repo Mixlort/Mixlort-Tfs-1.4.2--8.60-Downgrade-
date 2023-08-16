@@ -42,7 +42,6 @@ enum ItemTypes_t
 	ITEM_TYPE_BED,
 	ITEM_TYPE_KEY,
 	ITEM_TYPE_RUNE,
-	ITEM_TYPE_PODIUM,
 	ITEM_TYPE_LAST
 };
 
@@ -170,7 +169,6 @@ enum ItemParseAttributes_t
 	ITEM_PARSE_WALKSTACK,
 	ITEM_PARSE_BLOCKING,
 	ITEM_PARSE_ALLOWDISTREAD,
-	ITEM_PARSE_STOREITEM,
 	ITEM_PARSE_WORTH,
 	ITEM_PARSE_REFLECTPERCENTALL,
 	ITEM_PARSE_REFLECTPERCENTELEMENTS,
@@ -214,7 +212,6 @@ enum ItemParseAttributes_t
 	ITEM_PARSE_BOOSTPERCENTDROWN,
 	ITEM_PARSE_BOOSTPERCENTPHYSICAL,
 	ITEM_PARSE_BOOSTPERCENTHEALING,
-	ITEM_PARSE_SUPPLY,
 };
 
 struct Abilities
@@ -282,11 +279,9 @@ public:
 	bool isTrashHolder() const { return (type == ITEM_TYPE_TRASHHOLDER); }
 	bool isBed() const { return (type == ITEM_TYPE_BED); }
 	bool isRune() const { return (type == ITEM_TYPE_RUNE); }
-	bool isPodium() const { return (type == ITEM_TYPE_PODIUM); }
 	bool isPickupable() const { return (allowPickupable || pickupable); }
 	bool isUseable() const { return (useable); }
 	bool hasSubType() const { return (isFluidContainer() || isSplash() || stackable || charges != 0); }
-	bool isSupply() const { return supply; }
 
 	Abilities& getAbilities()
 	{
@@ -322,7 +317,6 @@ public:
 	uint16_t id = 0;
 	uint16_t clientId = 0;
 	bool stackable = false;
-	bool isAnimation = false;
 
 	std::string name;
 	std::string article;
@@ -383,7 +377,6 @@ public:
 	uint8_t classification = 0;
 	int8_t hitChance = 0;
 
-	bool storeItem = false;
 	bool forceUse = false;
 	bool forceSerialize = false;
 	bool hasHeight = false;
@@ -411,7 +404,6 @@ public:
 	bool lookThrough = false;
 	bool stopTime = false;
 	bool showCount = true;
-	bool supply = false;
 };
 
 class Items

@@ -336,7 +336,6 @@ ReturnValue Actions::internalUseItem(Player* player, const Position& pos, uint8_
 
 		if (bed->trySleep(player)) {
 			player->setBedItem(bed);
-			g_game.sendOfflineTrainingDialog(player);
 		}
 
 		return RETURNVALUE_NOERROR;
@@ -347,9 +346,10 @@ ReturnValue Actions::internalUseItem(Player* player, const Position& pos, uint8_
 
 		// depot container
 		if (DepotLocker* depot = container->getDepotLocker()) {
-			DepotLocker& myDepotLocker = player->getDepotLocker();
-			myDepotLocker.setParent(depot->getParent()->getTile());
-			openContainer = &myDepotLocker;
+			DepotLocker* myDepotLocker = player->getDepotLocker(depot->getDepotId());
+			myDepotLocker->setParent(depot->getParent());
+			openContainer = myDepotLocker;
+			player->setLastDepotId(depot->getDepotId());
 		} else {
 			openContainer = container;
 		}
@@ -392,11 +392,11 @@ static void showUseHotkeyMessage(Player* player, const Item* item, uint32_t coun
 {
 	const ItemType& it = Item::items[item->getID()];
 	if (!it.showCount) {
-		player->sendTextMessage(MESSAGE_HOTKEY_PRESSED, fmt::format("Using one of {:s}...", item->getName()));
+		player->sendTextMessage(MESSAGE_INFO_DESCR, fmt::format("Using one of {:s}...", item->getName()));
 	} else if (count == 1) {
-		player->sendTextMessage(MESSAGE_HOTKEY_PRESSED, fmt::format("Using the last {:s}...", item->getName()));
+		player->sendTextMessage(MESSAGE_INFO_DESCR, fmt::format("Using the last {:s}...", item->getName()));
 	} else {
-		player->sendTextMessage(MESSAGE_HOTKEY_PRESSED,
+		player->sendTextMessage(MESSAGE_INFO_DESCR,
 		                        fmt::format("Using one of {:d} {:s}...", count, item->getPluralName()));
 	}
 }
@@ -405,10 +405,6 @@ bool Actions::useItem(Player* player, const Position& pos, uint8_t index, Item* 
 {
 	int32_t cooldown = g_config.getNumber(ConfigManager::ACTIONS_DELAY_INTERVAL);
 	player->setNextAction(OTSYS_TIME() + cooldown);
-	player->sendUseItemCooldown(cooldown);
-	if (item->isSupply()) {
-		player->sendSupplyUsed(item->getClientID());
-	}
 
 	if (isHotkey) {
 		uint16_t subType = item->getSubType();
@@ -444,7 +440,7 @@ bool Actions::useItemEx(Player* player, const Position& fromPos, const Position&
 {
 	int32_t cooldown = g_config.getNumber(ConfigManager::EX_ACTIONS_DELAY_INTERVAL);
 	player->setNextAction(OTSYS_TIME() + cooldown);
-	player->sendUseItemCooldown(cooldown);
+	// player->sendUseItemCooldown(cooldown);
 
 	Action* action = getAction(item);
 	if (!action) {
@@ -509,33 +505,10 @@ bool Action::configureEvent(const pugi::xml_node& node)
 	return true;
 }
 
-namespace {
-
-bool enterMarket(Player* player, Item*, const Position&, Thing*, const Position&, bool)
+bool Action::loadFunction(const pugi::xml_attribute& attr, bool)
 {
-	player->sendMarketEnter();
-	return true;
-}
-
-} // namespace
-
-bool Action::loadFunction(const pugi::xml_attribute& attr, bool isScripted)
-{
-	const char* functionName = attr.as_string();
-	if (caseInsensitiveEqual(functionName, "market")) {
-		function = enterMarket;
-	} else {
-		if (!isScripted) {
-			std::cout << "[Warning - Action::loadFunction] Function \"" << functionName << "\" does not exist."
-			          << std::endl;
-			return false;
-		}
-	}
-
-	if (!isScripted) {
-		scripted = false;
-	}
-	return true;
+	std::cout << "[Warning - Action::loadFunction] Function \"" << attr.as_string() << "\" does not exist." << std::endl;
+	return false;
 }
 
 ReturnValue Action::canExecuteAction(const Player* player, const Position& toPos)
